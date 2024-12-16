@@ -38,9 +38,10 @@ Let's check the logs:
 {
   `command`: `docker logs -f selforganizingai-ml-simulation-1`
 }
-By pulling and using the container, you accept the terms and conditions of this license:\nhttps://developer.nvidia.com/ngc/nvidia-deep-learning-container-license\n\nNOTE: The SHMEM allocation limit is set to the default of 64MB.  This may be\n   insufficient for PyTorch.  NVIDIA recommends the use of the following flags:\n   docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 ...\n\n
+By pulling and using the container, you accept the terms and conditions of this license: https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license NOTE: The SHMEM allocation limit is set to the default of 64MB.  This may be insufficient for PyTorch.  NVIDIA recommends the use of the following flags:   docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 
 
-## Initializing Self-Organizing Simulation...\nRunning simulation on device: cuda\n\nSimulation completed successfully!\n\nFinal Statistics:\nmean_position: -0.0504\nposition_std: 0.9959\nmean_velocity: -0.0319\nvelocity_std: 0.5233\nmean_distance: 1.6934\nenergy: 0.6971\n",
+ Initializing Self-Organizing Simulation...Running simulation on device: cuda. 
+## Simulation completed successfully! Final Statistics: mean_position: -0.0504 position_std: 0.9959 mean_velocity: -0.0319 velocity_std: 0.5233 mean_distance: 1.6934 energy: 0.6971
 
 Success! The simulation is now working correctly. We can see from the final statistics that:
 1. The agents are well distributed (position_std ≈ 1.0)
