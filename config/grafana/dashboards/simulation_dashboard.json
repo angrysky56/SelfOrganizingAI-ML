@@ -1,0 +1,121 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "title": "GPU Metrics",
+      "type": "row",
+      "panels": [
+        {
+          "title": "GPU Utilization",
+          "type": "graph",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "nvidia_gpu_utilization",
+              "legendFormat": "GPU {{gpu}}",
+              "interval": "1s"
+            }
+          ]
+        },
+        {
+          "title": "GPU Memory Usage",
+          "type": "gauge",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "nvidia_gpu_memory_used_bytes / nvidia_gpu_memory_total_bytes * 100",
+              "legendFormat": "Memory Usage %"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Simulation Metrics",
+      "type": "row",
+      "panels": [
+        {
+          "title": "Agent Statistics",
+          "type": "graph",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "simulation_agent_count",
+              "legendFormat": "Active Agents"
+            },
+            {
+              "expr": "simulation_agent_velocity_mean",
+              "legendFormat": "Avg Velocity"
+            }
+          ]
+        },
+        {
+          "title": "Pattern Formation",
+          "type": "heatmap",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "simulation_pattern_density",
+              "legendFormat": "Density"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "System Performance",
+      "type": "row",
+      "panels": [
+        {
+          "title": "Processing Time",
+          "type": "graph",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "rate(simulation_step_duration_seconds_sum[1m]) / rate(simulation_step_duration_seconds_count[1m])",
+              "legendFormat": "Avg Step Time"
+            }
+          ]
+        },
+        {
+          "title": "Memory Usage",
+          "type": "graph",
+          "datasource": "prometheus",
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes",
+              "legendFormat": "Memory"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 21,
+  "style": "dark",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "Simulation Dashboard",
+  "uid": "simulation"
+}

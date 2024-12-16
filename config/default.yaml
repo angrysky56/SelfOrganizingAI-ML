@@ -1,0 +1,28 @@
+# Default configuration for SelfOrganizingAI-ML
+
+system:
+  name: SelfOrganizingAI-ML
+  version: 0.1.0
+  
+ml_pipeline:
+  batch_size: 32
+  learning_rate: 0.001
+  optimizer: adam
+  
+knowledge_graph:
+  embedding_dim: 128
+  similarity_threshold: 0.75
+  
+ethics:
+  bias_threshold: 0.1
+  fairness_metrics:
+    - demographic_parity
+    - equal_opportunity
+    
+simulation:
+  max_iterations: 1000
+  convergence_threshold: 0.001
+  
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

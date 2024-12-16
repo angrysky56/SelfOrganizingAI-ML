@@ -1,0 +1,92 @@
+{
+    "collections": {
+        "correlation_patterns": {
+            "dimension": 512,
+            "fields": [
+                {
+                    "name": "pattern_id",
+                    "type": "VARCHAR",
+                    "is_primary": true,
+                    "max_length": 100
+                },
+                {
+                    "name": "vector",
+                    "type": "FLOAT_VECTOR",
+                    "dim": 512
+                },
+                {
+                    "name": "pattern_type",
+                    "type": "VARCHAR",
+                    "max_length": 100
+                },
+                {
+                    "name": "coherence_metrics",
+                    "type": "JSON"
+                },
+                {
+                    "name": "temporal_context",
+                    "type": "JSON"
+                }
+            ],
+            "index_params": {
+                "index_type": "HNSW",
+                "metric_type": "L2",
+                "params": {
+                    "M": 16,
+                    "efConstruction": 500
+                }
+            }
+        },
+        "predictive_indicators": {
+            "dimension": 512,
+            "fields": [
+                {
+                    "name": "indicator_id",
+                    "type": "VARCHAR",
+                    "is_primary": true,
+                    "max_length": 100
+                },
+                {
+                    "name": "vector",
+                    "type": "FLOAT_VECTOR",
+                    "dim": 512
+                },
+                {
+                    "name": "indicator_type",
+                    "type": "VARCHAR",
+                    "max_length": 100
+                },
+                {
+                    "name": "forecast_window",
+                    "type": "JSON"
+                },
+                {
+                    "name": "pattern_memory",
+                    "type": "JSON"
+                },
+                {
+                    "name": "coherence_metrics",
+                    "type": "JSON"
+                }
+            ],
+            "index_params": {
+                "index_type": "HNSW",
+                "metric_type": "L2",
+                "params": {
+                    "M": 16,
+                    "efConstruction": 500
+                }
+            }
+        }
+    },
+    "system_params": {
+        "coherence_threshold": 0.95,
+        "prediction_window": "adaptive",
+        "memory_retention": "long_term",
+        "gpu_optimization": {
+            "enabled": true,
+            "cache_size": "auto",
+            "compute_threads": "auto"
+        }
+    }
+}
