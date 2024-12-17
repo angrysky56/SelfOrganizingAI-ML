@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy source code
 COPY src/ ./src/
@@ -15,4 +15,4 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Default command (can be overridden)
-CMD ["python", "-m", "src.simulations.prototypes.self_organizing_sim"]
+CMD ["python", "-m", "uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8443"]

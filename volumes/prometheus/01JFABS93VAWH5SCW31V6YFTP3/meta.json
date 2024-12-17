@@ -1,0 +1,17 @@
+{
+	"ulid": "01JFABS93VAWH5SCW31V6YFTP3",
+	"minTime": 1734429600000,
+	"maxTime": 1734436800000,
+	"stats": {
+		"numSamples": 519383,
+		"numSeries": 1994,
+		"numChunks": 5889
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01JFABS93VAWH5SCW31V6YFTP3"
+		]
+	},
+	"version": 1
+}

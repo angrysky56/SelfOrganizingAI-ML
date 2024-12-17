@@ -1,0 +1,17 @@
+{
+	"ulid": "01JFA55SX6716MV5FFP55VA433",
+	"minTime": 1734422400000,
+	"maxTime": 1734429600000,
+	"stats": {
+		"numSamples": 1202340,
+		"numSeries": 2172,
+		"numChunks": 9986
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01JFA55SX6716MV5FFP55VA433"
+		]
+	},
+	"version": 1
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Organizing AI Experiments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-8">Self-Organizing AI Experiments</h1>
+        
+        <!-- Experiment Controls -->
+        <div class="mb-8 bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Pattern Formation</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Pattern Selection -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Pattern Type</label>
+                    <select id="patternType" class="w-full p-2 border rounded">
+                        <option value="circle">Circle Pattern</option>
+                        <option value="grid">Grid Pattern</option>
+                        <option value="random_clusters">Random Clusters</option>
+                    </select>
+                </div>
+                
+                <!-- Agent Count -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Number of Agents</label>
+                    <input type="range" id="agentCount" min="50" max="500" value="200" 
+                           class="w-full" oninput="updateAgentCount(this.value)">
+                    <span id="agentCountValue">200</span>
+                </div>
+            </div>
+            
+            <div class="flex justify-center gap-4">
+                <button id="startBtn" onclick="startExperiment()" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Start Experiment
+                </button>
+                <button id="stopBtn" onclick="stopExperiment()" 
+                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" disabled>
+                    Stop
+                </button>
+            </div>
+        </div>
+        
+        <!-- Visualization Area -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Agent Positions -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-semibold mb-4">Agent Positions</h3>
+                <div id="positionPlot" style="height: 400px;"></div>
+            </div>
+            
+            <!-- Metrics -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-semibold mb-4">Pattern Metrics</h3>
+                <div id="metricsPlot" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let metricsHistory = [];
+        
+        function updateAgentCount(value) {
+            document.getElementById('agentCountValue').textContent = value;
+        }
+        
+        function startExperiment() {
+            const patternType = document.getElementById('patternType').value;
+            const agentCount = document.getElementById('agentCount').value;
+            
+            ws = new WebSocket('ws://localhost:8000/ws');
+            
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    command: 'start',
+                    params: {
+                        pattern_type: patternType,
+                        num_agents: parseInt(agentCount)
+                    }
+                }));
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateVisualization(data);
+            };
+        }
+        
+        function stopExperiment() {
+            if (ws) {
+                ws.close();
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+            }
+        }
+        
+        function updateVisualization(data) {
+            // Update position plot
+            const positions = {
+                x: data.positions.map(p => p[0]),
+                y: data.positions.map(p => p[1]),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { size: 6 }
+            };
+            
+            Plotly.newPlot('positionPlot', [positions], {
+                title: 'Agent Positions',
+                xaxis: { range: [-1.2, 1.2] },
+                yaxis: { range: [-1.2, 1.2] }
+            });
+            
+            // Update metrics
+            metricsHistory.push({
+                time: new Date(),
+                pattern_score: data.pattern_score,
+                density: data.density_variation,
+                order: data.spatial_order
+            });
+            
+            if (metricsHistory.length > 100) {
+                metricsHistory.shift();
+            }
+            
+            const metricsData = [{
+                x: metricsHistory.map(m => m.time),
+                y: metricsHistory.map(m => m.pattern_score),
+                name: 'Pattern Score',
+                type: 'scatter'
+            }, {
+                x: metricsHistory.map(m => m.time),
+                y: metricsHistory.map(m => m.density),
+                name: 'Density',
+                type: 'scatter'
+            }, {
+                x: metricsHistory.map(m => m.time),
+                y: metricsHistory.map(m => m.order),
+                name: 'Order',
+                type: 'scatter'
+            }];
+            
+            Plotly.newPlot('metricsPlot', metricsData, {
+                title: 'Pattern Metrics',
+                xaxis: { title: 'Time' },
+                yaxis: { title: 'Value' }
+            });
+        }
+    </script>
+</body>
+</html>

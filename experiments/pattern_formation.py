@@ -1,15 +1,14 @@
 """
-Pattern formation experiment
+Pattern formation experiment with real-time streaming updates
 Studies emergence of spatial patterns and structures
 """
 
 import asyncio
 import torch
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, AsyncGenerator
+from datetime import datetime
 from src.simulations.prototypes.self_organizing_sim import SelfOrganizingSimulation, SimulationConfig
-from src.simulations.utils.advanced_visualizer import AdvancedVisualizer
-from src.integrations.milvus_connector import SimulationStore
 
 class PatternFormationExperiment:
     def __init__(self, config: SimulationConfig = None):
@@ -20,62 +19,37 @@ class PatternFormationExperiment:
             max_iterations=2000
         )
         self.sim = SelfOrganizingSimulation(self.config)
-        self.viz = AdvancedVisualizer()
         
-    async def run_experiment(self, pattern_type: str, 
-                           num_steps: int = 1000,
-                           save_results: bool = True) -> Dict[str, Any]:
-        """Run pattern formation experiment."""
+    async def run_with_updates(self, pattern_type: str = "circle",
+                             num_steps: int = 1000) -> AsyncGenerator[Dict[str, Any], None]:
+        """Run experiment with streaming updates."""
         print(f"Starting pattern formation experiment with {pattern_type} pattern...")
         
-        # Initialize storage if needed
-        if save_results:
-            store = SimulationStore()
-            store.connect()
-            store.initialize_collection()
+        # Initialize with selected pattern
+        state = await self.initialize_pattern(pattern_type)
         
-        try:
-            # Initialize with selected pattern
-            state = await self.initialize_pattern(pattern_type)
-            states_history = []
-            stats_history = []
-            pattern_metrics = []
+        for step in range(num_steps):
+            # Update simulation
+            state = await self.sim.step(state)
+            metrics = self._calculate_pattern_metrics(state)
             
-            # Run simulation
-            for step in range(num_steps):
-                # Update simulation
-                state = await self.sim.step(state)
-                stats = self.sim.get_state_statistics(state)
-                pattern_score = self._calculate_pattern_metrics(state)
-                
-                # Store data
-                states_history.append(state)
-                stats_history.append(stats)
-                pattern_metrics.append(pattern_score)
-                
-                if save_results:
-                    await store.store_simulation_state(state, stats)
-                
-                # Print progress
-                if step % 100 == 0:
-                    print(f"Step {step}/{num_steps}, Pattern Score: {pattern_score:.3f}")
-            
-            # Generate visualizations
-            print("Generating visualizations...")
-            self._generate_pattern_analysis(states_history, pattern_metrics)
-            
-            return {
-                'states': states_history,
-                'stats': stats_history,
-                'pattern_metrics': pattern_metrics,
-                'final_state': states_history[-1]
+            # Prepare visualization data
+            viz_data = {
+                'step': step,
+                'positions': state['agents'][:, :2],  # x,y coordinates
+                'velocities': state['agents'][:, 2:], # velocity vectors
+                'pattern_score': metrics['pattern_score'],
+                'density_variation': metrics['density_variation'],
+                'spatial_order': metrics['spatial_order'],
+                'timestamp': datetime.now().isoformat()
             }
             
-        finally:
-            if save_results:
-                store.cleanup()
-                
-    def _calculate_pattern_metrics(self, state: Dict[str, Any]) -> float:
+            yield viz_data
+            
+            # Control update rate
+            await asyncio.sleep(0.05)  # 20 FPS
+            
+    def _calculate_pattern_metrics(self, state: Dict[str, Any]) -> Dict[str, float]:
         """Calculate metrics for pattern quality."""
         agents = state['agents'].cpu().numpy()
         positions = agents[:, :2]
@@ -87,47 +61,19 @@ class PatternFormationExperiment:
         
         # Calculate spatial order parameter
         velocities = agents[:, 2:]
-        velocity_alignment = np.abs(np.mean(velocities / np.linalg.norm(velocities, axis=1)[:, np.newaxis], axis=0))
-        spatial_order = np.mean(velocity_alignment)
+        velocity_norms = np.linalg.norm(velocities, axis=1)
+        velocity_norms = np.where(velocity_norms > 0, velocity_norms, 1)  # Avoid division by zero
+        normalized_velocities = velocities / velocity_norms[:, np.newaxis]
+        spatial_order = np.abs(np.mean(normalized_velocities, axis=0))
         
-        # Combine metrics
-        pattern_score = 0.6 * density_variation + 0.4 * spatial_order
-        return float(pattern_score)
+        # Combined pattern score
+        pattern_score = 0.6 * density_variation + 0.4 * np.mean(spatial_order)
         
-    def _generate_pattern_analysis(self, 
-                                 states_history: List[Dict[str, Any]],
-                                 pattern_metrics: List[float]) -> None:
-        """Generate comprehensive pattern analysis visualizations."""
-        plt.figure(figsize=(15, 10))
-        
-        # Pattern evolution plot
-        plt.subplot(221)
-        plt.plot(pattern_metrics)
-        plt.title('Pattern Formation Evolution')
-        plt.xlabel('Time Steps')
-        plt.ylabel('Pattern Score')
-        
-        # Final pattern visualization
-        plt.subplot(222)
-        final_state = states_history[-1]
-        agents = final_state['agents'].cpu().numpy()
-        plt.scatter(agents[:, 0], agents[:, 1], 
-                   c=np.linalg.norm(agents[:, 2:], axis=1),
-                   cmap='viridis')
-        plt.title('Final Pattern Formation')
-        plt.colorbar(label='Velocity Magnitude')
-        
-        # Local density plot
-        plt.subplot(223)
-        self.viz.plot_density_evolution([states_history[0], states_history[-1]], num_frames=2)
-        
-        # Spatial correlation plot
-        plt.subplot(224)
-        self.viz.plot_correlation_matrix([self.sim.get_state_statistics(state) 
-                                        for state in states_history[-10:]])
-        
-        plt.tight_layout()
-        plt.savefig(f'pattern_analysis_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png')
+        return {
+            'pattern_score': float(pattern_score),
+            'density_variation': float(density_variation),
+            'spatial_order': float(np.mean(spatial_order))
+        }
         
     async def initialize_pattern(self, pattern_type: str) -> Dict[str, Any]:
         """Initialize agents in specific patterns."""
@@ -191,16 +137,3 @@ class PatternFormationExperiment:
         
         agents = torch.cat([positions, velocities], dim=1)
         return await self.sim.initialize({'agents': agents})
-
-if __name__ == "__main__":
-    # Run experiments with different patterns
-    async def main():
-        experiment = PatternFormationExperiment()
-        patterns = ["circle", "grid", "random_clusters"]
-        
-        for pattern in patterns:
-            print(f"\nRunning experiment with {pattern} pattern")
-            results = await experiment.run_experiment(pattern)
-            print(f"Completed {pattern} pattern experiment")
-            
-    asyncio.run(main())
