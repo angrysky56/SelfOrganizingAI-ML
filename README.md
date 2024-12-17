@@ -1,3 +1,5 @@
+## More broken now- just something to think about currently.
+
 # SelfOrganizingAI-ML
 
 A comprehensive framework for self-organizing AI systems with integrated machine learning capabilities, featuring real-time visualizations and emergent behavior analysis.
